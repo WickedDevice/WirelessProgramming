@@ -11,8 +11,8 @@
  * published by the Free Software Foundation.
  */
 
-#include <WirelessHEX69.h>
-#include <RFM69registers.h>
+#include <WildFire_WirelessHEX69.h>
+#include <WildFire_RFM69registers.h>
 #include <avr/wdt.h>
 
 /// Checks whether the last message received was a wireless programming request handshake
@@ -20,7 +20,7 @@
 /// store it on the external flash chip, then reboot
 /// Assumes radio has been initialized and has just received a message (is not in SLEEP mode, and you called CRCPass())
 /// Assumes flash is an external SPI flash memory chip that has been initialized
-void CheckForWirelessHEX(RFM69 radio, SPIFlash flash, boolean DEBUG, byte LEDpin)
+void CheckForWirelessHEX(WildFire_RFM69 radio, WildFire_SPIFlash flash, boolean DEBUG, byte LEDpin)
 {
   //special FLASH command, enter a FLASH image exchange sequence
   if (radio.DATALEN >= 4 && radio.DATA[0]=='F' && radio.DATA[1]=='L' && radio.DATA[2]=='X' && radio.DATA[3]=='?')
@@ -49,7 +49,7 @@ void CheckForWirelessHEX(RFM69 radio, SPIFlash flash, boolean DEBUG, byte LEDpin
 }
 
 #ifdef SHIFTCHANNEL
-boolean HandleWirelessHEXDataWrapper(RFM69 radio, byte remoteID, SPIFlash flash, boolean DEBUG, byte LEDpin) {
+boolean HandleWirelessHEXDataWrapper(WildFire_RFM69 radio, byte remoteID, WildFire_SPIFlash flash, boolean DEBUG, byte LEDpin) {
   radio.writeReg(REG_FRFMSB, radio.readReg(REG_FRFMSB) + 1); //MSB+1 => shift freq up by 8Mhz
   boolean result = HandleWirelessHEXData(radio, remoteID, flash, DEBUG, LEDpin);
   radio.writeReg(REG_FRFMSB, radio.readReg(REG_FRFMSB) - 1); //MSB-1 => shift freq down by 8Mhz
@@ -57,7 +57,7 @@ boolean HandleWirelessHEXDataWrapper(RFM69 radio, byte remoteID, SPIFlash flash,
 }
 #endif
 
-boolean HandleWirelessHEXData(RFM69 radio, byte remoteID, SPIFlash flash, boolean DEBUG, byte LEDpin) {
+boolean HandleWirelessHEXData(WildFire_RFM69 radio, byte remoteID, WildFire_SPIFlash flash, boolean DEBUG, byte LEDpin) {
   long now=0;
   uint16_t tmp,seq=0;
   char buffer[16];
@@ -178,7 +178,7 @@ byte readSerialLine(char* input, char endOfLineChar, byte maxLength, uint16_t ti
 }
 
 /// returns TRUE if a HEX file transmission was detected and it was actually transmitted successfully
-boolean CheckForSerialHEX(byte* input, byte inputLen, RFM69 radio, byte targetID, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG)
+boolean CheckForSerialHEX(byte* input, byte inputLen, WildFire_RFM69 radio, byte targetID, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG)
 {
   if (inputLen == 4 && input[0]=='F' && input[1]=='L' && input[2]=='X' && input[3]=='?') {
     if (HandleSerialHandshake(radio, targetID, false, TIMEOUT, ACKTIMEOUT, DEBUG))
@@ -201,7 +201,7 @@ boolean CheckForSerialHEX(byte* input, byte inputLen, RFM69 radio, byte targetID
   return false;
 }
 
-boolean HandleSerialHandshake(RFM69 radio, byte targetID, boolean isEOF, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG)
+boolean HandleSerialHandshake(WildFire_RFM69 radio, byte targetID, boolean isEOF, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG)
 {
   long now = millis();
 
@@ -220,7 +220,7 @@ boolean HandleSerialHandshake(RFM69 radio, byte targetID, boolean isEOF, uint16_
 }
 
 #ifdef SHIFTCHANNEL
-boolean HandleSerialHEXDataWrapper(RFM69 radio, byte targetID, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG) {
+boolean HandleSerialHEXDataWrapper(WildFire_RFM69 radio, byte targetID, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG) {
   radio.writeReg(REG_FRFMSB, radio.readReg(REG_FRFMSB) + 2); //MSB+2 => shift freq up by 8Mhz
   boolean result = HandleSerialHEXData(radio, targetID, TIMEOUT, ACKTIMEOUT, DEBUG);
   radio.writeReg(REG_FRFMSB, radio.readReg(REG_FRFMSB) - 2); //MSB-2 => shift freq down by 8Mhz
@@ -229,7 +229,7 @@ boolean HandleSerialHEXDataWrapper(RFM69 radio, byte targetID, uint16_t TIMEOUT,
 #endif
 
 
-boolean HandleSerialHEXData(RFM69 radio, byte targetID, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG) {
+boolean HandleSerialHEXData(WildFire_RFM69 radio, byte targetID, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG) {
   long now=millis();
   uint16_t seq=0, tmp=0, inputLen;
   byte remoteID = radio.SENDERID; //save the remoteID as soon as possible
@@ -356,7 +356,7 @@ byte BYTEfromHEX(char MSB, char LSB)
 }
 
 //return the SEQ of the ACK received, or -1 if invalid
-boolean sendHEXPacket(RFM69 radio, byte targetID, byte* sendBuf, byte hexDataLen, uint16_t seq, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG)
+boolean sendHEXPacket(WildFire_RFM69 radio, byte targetID, byte* sendBuf, byte hexDataLen, uint16_t seq, uint16_t TIMEOUT, uint16_t ACKTIMEOUT, boolean DEBUG)
 {
   long now = millis();
   
